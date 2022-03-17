@@ -6,31 +6,42 @@ using UnityEngine.InputSystem;
 public class PlayerComponent : MonoBehaviour
 {
     public float moveSpeed;
-    private Rigidbody rb;
     public Vector3 input;
     public bool isRight;
     public bool isWrong;
 
+    private Rigidbody rb;
+
+    private void Awake() 
+    {
+        GameManager.Instance.RegisterPlayer(this.gameObject);
+    }
+
     private void Start()
     {
-        
         rb = GetComponent<Rigidbody>();
+        
+        //Hack to allow the player prefabs to spawn on the ground level
+        transform.position = new Vector3 (transform.position.x, transform.position.y + 1.50f, transform.position.z);
     }
+
     private void Update()
     {
         input.z = input.y;
         rb.velocity = input * moveSpeed;
     }
+
     public void OnMove(InputAction.CallbackContext _context)
     {
         input = _context.ReadValue<Vector2>();
     }
+
     private void OnTriggerEnter(Collider col)
     {
         if (col.CompareTag("Start"))
         {
-            GameManager.gm.LoadLevel();
-            GameManager.gm.playerList.Add(this);
+            GameManager.Instance.LoadLevel();
+            GameManager.Instance.playerList.Add(this);
             
         }
         if (col.CompareTag("Valid"))
@@ -44,6 +55,7 @@ public class PlayerComponent : MonoBehaviour
             isWrong = true;
         }
     }
+
     private void OnTriggerExit(Collider col)
     {
         if (col.CompareTag("Valid"))
