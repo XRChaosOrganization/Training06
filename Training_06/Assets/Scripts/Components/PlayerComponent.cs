@@ -9,12 +9,15 @@ public class PlayerComponent : MonoBehaviour
     public Vector3 input;
     public bool isRight;
     public bool isWrong;
+    public int vies;
+    public float startTimer;
+    float _startTimer;
 
     private Rigidbody rb;
 
     private void Awake() 
     {
-        GameManager.Instance.RegisterPlayer(this.gameObject);
+        //GameManager.Instance.RegisterPlayer(this.gameObject);
     }
 
     private void Start()
@@ -29,6 +32,8 @@ public class PlayerComponent : MonoBehaviour
     {
         input.z = input.y;
         rb.velocity = input * moveSpeed;
+
+
     }
 
     public void OnMove(InputAction.CallbackContext _context)
@@ -40,9 +45,16 @@ public class PlayerComponent : MonoBehaviour
     {
         if (col.CompareTag("Start"))
         {
-            GameManager.Instance.LoadLevel();
-            GameManager.Instance.playerList.Add(this);
-            
+            GameManager.Instance.RegisterPlayer(this.gameObject);
+            if (GameManager.Instance.playerList.Count == GameManager.Instance.GetComponent<PlayerInputManager>().playerCount)
+            {
+                _startTimer = startTimer;
+                _startTimer -= Time.deltaTime;
+                if (_startTimer <= 0)
+                {
+                    GameManager.Instance.LoadLevel();
+                }
+            }
         }
         if (col.CompareTag("Valid"))
         {

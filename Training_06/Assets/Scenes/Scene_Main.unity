@@ -5165,6 +5165,12 @@ MonoBehaviour:
   timerDisplayText: {fileID: 5301774103029235372}
   nombreQuestionsParPhase: 6
   timePerLevel: 15
+  firstLeveldelay: 1
+  questionDisplayDelay: 1
+  answersDisplayDelay: 1
+  noAnswerdelay: 1
+  goodAnswerDelay: 1
+  wrongAnswerDelay: 1
   playerList: []
   trappes:
   - {fileID: 1324323123}

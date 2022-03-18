@@ -34,6 +34,12 @@ public class GameManager : MonoBehaviour
     [Header("Game Settings")]
     public int nombreQuestionsParPhase = 6;
     public float timePerLevel = 20;
+    public float firstLeveldelay;
+    public float questionDisplayDelay;
+    public float answersDisplayDelay;
+    public float noAnswerdelay;
+    public float goodAnswerDelay;
+    public float wrongAnswerDelay;
     public List<PlayerComponent> playerList;
     public List<GameObject> trappes;
 
@@ -43,6 +49,7 @@ public class GameManager : MonoBehaviour
     private int nombreQuestionsposes;
     float timer;
     bool isTimerEnabled;
+    string previousTheme;
 
     private void Awake()
     {
@@ -65,27 +72,35 @@ public class GameManager : MonoBehaviour
             if (timer <=0)
             {
                 isTimerEnabled = false;
-                EndQuestion();
+                StartCoroutine(EndQuestion());
             }
         }
     }
 
-    void EndQuestion()
+    IEnumerator EndQuestion()
     {
         foreach (PlayerComponent _player in playerList)
         {
             if (_player.isRight)
             {
-                Debug.Log("Bonne r�ponse");
+                //Anim bonne réponse
+                yield return new WaitForSeconds(goodAnswerDelay);
             }
             else if (_player.isWrong)
             {
-                Debug.Log("Mauvaise r�ponse");
+                StartCoroutine(KillPlayer(_player));
+            }
+            else if (_player.vies >0)
+            {
+                //Anim pas de réponse / anim enlever une vie
+                yield return new WaitForSeconds(noAnswerdelay);
+                _player.vies--;
             }
             else
             {
-                Debug.Log("Pas de r�ponse");
+                StartCoroutine(KillPlayer(_player));
             }
+            
         }
         LoadNewQuestion();
     }
@@ -99,101 +114,39 @@ public class GameManager : MonoBehaviour
         game.SetActive(true);
 
         GenerateNewQuestion(nombreQuestionsposes);
-        //RandomizeQuestionAndAnswers();
+        
     }
 
     //Going to next question (already in game)
     public void LoadNewQuestion ()
     {
         timer = timePerLevel;
+       //if (playerList.Count >= 2)
+       //{
+       //    StartCoroutine(GenerateNewQuestion(nombreQuestionsposes));
+       //}
+       //else if (playerList.Count <=0)
+       //{
+       //    //Ex Aequo !
+       //}
+       //else
+       //{
+       //    //On a un gagnant!
+       //}
 
-        GenerateNewQuestion(nombreQuestionsposes);
+        
     }
 
-    //void RandomizeQuestionAndAnswers()
-    //{
-    //    List<int> randomizator = new List<int>();
-    //    while (randomizator.Count <4)
-    //    {
-    //        int r = UnityEngine.Random.Range(0, 4);
-    //        if (randomizator.Contains(r))
-    //        {
-    //            continue;
-    //        }
-    //        else
-    //        {
-    //            randomizator.Add(r);
-    //        }
-    //    }
-    //    switch (nombreQuestionsposes)
-    //    {
-    //        case int n when (n < nombreQuestionsParPhase):
-    //            int r1 = UnityEngine.Random.Range(0, questions1.Count);
-    //            for (int i = 0; i < 4; i++)
-    //            {
-    //                if (i == 0)
-    //                {
-    //                    trappes[randomizator[i]].GetComponentInChildren<TextMeshPro>().text = questions1[r1].reponses[i];
-    //                    trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Valid";
-    //                }
-    //                else
-    //                {
-    //                    trappes[randomizator[i]].GetComponentInChildren<TextMeshPro>().text = questions1[r1].reponses[i];
-    //                    trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Unvalid";
-    //                }
-    //            }
-    //            questionDisplayText.text = questions1[r1].intitule;
-    //            questions1.Remove(questions1[r1]);
-    //            
-    //            nombreQuestionsposes++;
-    //            break;
-    //        case int n when (n < 2 * nombreQuestionsParPhase):
-    //            int r2 = UnityEngine.Random.Range(0, questions2.Count);
-    //            for (int i = 0; i < 4; i++)
-    //            {
-    //                if (i == 0)
-    //                {
-    //                    trappes[randomizator[i]].GetComponentInChildren<TextMeshPro>().text = questions2[r2].reponses[i];
-    //                    trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Valid";
-    //                }
-    //                else
-    //                {
-    //                    trappes[randomizator[i]].GetComponentInChildren<TextMeshPro>().text = questions2[r2].reponses[i];
-    //                    trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Unvalid";
-    //                }
-    //            }
-    //            questionDisplayText.text = questions2[r2].intitule;
-    //            questions2.Remove(questions2[r2]);
-    //            nombreQuestionsposes++;
-    //            break;
-    //        case int n when (n < 3 * nombreQuestionsParPhase):
-    //            //Changer nombre question par phase pour infiniser jusqu'a une victoire
-    //            int r3 = UnityEngine.Random.Range(0, questions3.Count);
-    //            for (int i = 0; i < 4; i++)
-    //            {
-    //                if (i == 0)
-    //                {
-    //                    trappes[randomizator[i]].GetComponentInChildren<TextMeshPro>().text = questions3[r3].reponses[i];
-    //                    trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Valid";
-    //                }
-    //                else
-    //                {
-    //                    trappes[randomizator[i]].GetComponentInChildren<TextMeshPro>().text = questions3[r3].reponses[i];
-    //                    trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Unvalid";
-    //                }
-    //            }
-    //            questionDisplayText.text = questions3[r3].intitule;
-    //            questions3.Remove(questions3[r3]);
-    //            nombreQuestionsposes++;
-    //            break;
-    //    }
-    //    isTimerEnabled = true;
-    //}
+    
 
-    private void GenerateNewQuestion (int _nbDeQuestionsPosees)
+    private IEnumerator GenerateNewQuestion (int _nbDeQuestionsPosees)
     {
         List<int> randomizator = FillRandomizer();
         List<Question> questionTier = new List<Question>();
+        if (_nbDeQuestionsPosees ==0)
+        {
+            yield return new WaitForSeconds(firstLeveldelay);
+        }
 
         //Select the question tier
         if(_nbDeQuestionsPosees < nombreQuestionsParPhase)
@@ -206,6 +159,18 @@ public class GameManager : MonoBehaviour
         //Select a random question among the current tier
         Question question = questionTier[UnityEngine.Random.Range(0, questionTier.Count)];
 
+        while (question.theme == previousTheme)
+        {
+            continue;
+        }
+
+        //Display question
+        yield return new WaitForSeconds(questionDisplayDelay);
+        questionDisplayText.text = question.intitule;
+        previousTheme = question.theme;
+        questionTier.Remove(question);
+
+        yield return new WaitForSeconds(answersDisplayDelay);
         //Display question's answers in a random trap & set its tag
         for (int i = 0; i < randomizator.Count; i++)
         {
@@ -221,9 +186,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        //Display question
-        questionDisplayText.text = question.intitule;
-        questionTier.Remove(question);
+        
 
         //Increment + enable timer
         nombreQuestionsposes ++;
@@ -252,6 +215,13 @@ public class GameManager : MonoBehaviour
     public void RegisterPlayer (GameObject _player)
     {
         playerList.Add(_player.GetComponent<PlayerComponent>());
+    }
+    IEnumerator KillPlayer(PlayerComponent _player)
+    {
+        //Anim mauvaise réponse
+        yield return new WaitForSeconds(wrongAnswerDelay);
+        playerList.Remove(_player);
+        _player.gameObject.SetActive(false);
     }
 
     void ConvertCSV()
@@ -298,4 +268,5 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+    
 }
