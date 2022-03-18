@@ -211,13 +211,11 @@ public class GameManager : MonoBehaviour
         {
             if(i == 0)
             {
-                //trappes[randomizator[i]].GetComponentInChildren<TextMeshPro>().text = question.reponses[0];
                 trappes[randomizator[i]].GetComponent<TrappeComponent>().UpdateTrappeText(question.reponses[0]);
                 trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Valid";
             }
             else
             {
-                //trappes[randomizator[i]].GetComponentInChildren<TextMeshPro>().text = question.reponses[i];
                 trappes[randomizator[i]].GetComponent<TrappeComponent>().UpdateTrappeText(question.reponses[i]);
                 trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Unvalid";
             }
