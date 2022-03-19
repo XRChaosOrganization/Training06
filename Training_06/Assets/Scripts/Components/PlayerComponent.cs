@@ -5,35 +5,41 @@ using UnityEngine.InputSystem;
 
 public class PlayerComponent : MonoBehaviour
 {
+    public enum PlayerState {IS_RIGHT, IS_WRONG, DO_NOT_KNOW };
+    public PlayerState playerState;
+
+    [Header("3C Settings")]
     public float moveSpeed;
-    public Vector3 input;
-    public bool isRight;
-    public bool isWrong;
+    public float rotationSpeed; 
+    public Vector2 input;
+
+    [Header("Game state")]
     public int vies;
-    public float startTimer;
-    float _startTimer;
 
     private Rigidbody rb;
 
     private void Awake() 
     {
-        //GameManager.Instance.RegisterPlayer(this.gameObject);
+        GameManager.Instance.RegisterPlayer(this.gameObject);
     }
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        
-        //Hack to allow the player prefabs to spawn on the ground level
-        transform.position = new Vector3 (transform.position.x, transform.position.y + 1.50f, transform.position.z);
     }
 
     private void Update()
     {
-        input.z = input.y;
-        rb.velocity = input * moveSpeed;
+        Vector3 desiredVelocity = new Vector3(input.x, 0.0f, input.y);
+        rb.velocity = desiredVelocity * moveSpeed;
 
+        //Rotation
+        Vector3 lastLookingDirection = transform.forward;
+        
+        if (desiredVelocity.magnitude >= 0.3f)
+            lastLookingDirection = desiredVelocity;
 
+        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(lastLookingDirection, Vector3.up), Time.deltaTime * rotationSpeed);
     }
 
     public void OnMove(InputAction.CallbackContext _context)
@@ -43,40 +49,33 @@ public class PlayerComponent : MonoBehaviour
 
     private void OnTriggerEnter(Collider col)
     {
-        if (col.CompareTag("Start"))
+        if (col.CompareTag("TrappeButton"))
         {
-            GameManager.Instance.RegisterPlayer(this.gameObject);
-            if (GameManager.Instance.playerList.Count == GameManager.Instance.GetComponent<PlayerInputManager>().playerCount)
-            {
-                _startTimer = startTimer;
-                _startTimer -= Time.deltaTime;
-                if (_startTimer <= 0)
-                {
-                    GameManager.Instance.LoadLevel();
-                }
-            }
+            col.GetComponentInParent<TrappeButtonComponent>().RegisterPlayerOnTrappe(true, this.gameObject);
         }
         if (col.CompareTag("Valid"))
         {
-            isWrong = false;
-            isRight = true;
+            playerState = PlayerState.IS_RIGHT;
         }
         if (col.CompareTag("Unvalid"))
         {
-            isRight = false;
-            isWrong = true;
+            playerState = PlayerState.IS_WRONG;
         }
     }
 
     private void OnTriggerExit(Collider col)
     {
+        if (col.CompareTag("TrappeButton"))
+        {
+            col.GetComponentInParent<TrappeButtonComponent>().RegisterPlayerOnTrappe(false, this.gameObject);
+        }
         if (col.CompareTag("Valid"))
         {
-            isRight = false;
+            playerState = PlayerState.DO_NOT_KNOW;
         }
         if (col.CompareTag("Unvalid"))
         {
-            isWrong = false;
+            playerState = PlayerState.DO_NOT_KNOW;
         }
     }
 }

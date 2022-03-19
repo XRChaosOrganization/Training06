@@ -81,16 +81,16 @@ public class GameManager : MonoBehaviour
     {
         foreach (PlayerComponent _player in playerList)
         {
-            if (_player.isRight)
+            if (_player.playerState == PlayerComponent.PlayerState.IS_RIGHT)
             {
                 //Anim bonne réponse
                 yield return new WaitForSeconds(goodAnswerDelay);
             }
-            else if (_player.isWrong)
+            else if (_player.playerState == PlayerComponent.PlayerState.IS_WRONG)
             {
                 StartCoroutine(KillPlayer(_player));
             }
-            else if (_player.vies >0)
+            else if (_player.vies > 0 && _player.playerState == PlayerComponent.PlayerState.DO_NOT_KNOW)
             {
                 //Anim pas de réponse / anim enlever une vie
                 yield return new WaitForSeconds(noAnswerdelay);
@@ -100,7 +100,6 @@ public class GameManager : MonoBehaviour
             {
                 StartCoroutine(KillPlayer(_player));
             }
-            
         }
         LoadNewQuestion();
     }
@@ -113,37 +112,31 @@ public class GameManager : MonoBehaviour
         menu.SetActive(false);
         game.SetActive(true);
 
-        GenerateNewQuestion(nombreQuestionsposes);
+        StartCoroutine(GenerateNewQuestion(nombreQuestionsposes));
+    }
         
+    public void QuitGame ()
+    {
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #endif
+
+        Application.Quit();
     }
 
     //Going to next question (already in game)
     public void LoadNewQuestion ()
     {
         timer = timePerLevel;
-       //if (playerList.Count >= 2)
-       //{
-       //    StartCoroutine(GenerateNewQuestion(nombreQuestionsposes));
-       //}
-       //else if (playerList.Count <=0)
-       //{
-       //    //Ex Aequo !
-       //}
-       //else
-       //{
-       //    //On a un gagnant!
-       //}
-
-        
+        StartCoroutine(GenerateNewQuestion(nombreQuestionsposes));
     }
-
-    
 
     private IEnumerator GenerateNewQuestion (int _nbDeQuestionsPosees)
     {
         List<int> randomizator = FillRandomizer();
         List<Question> questionTier = new List<Question>();
-        if (_nbDeQuestionsPosees ==0)
+
+        if (_nbDeQuestionsPosees == 0)
         {
             yield return new WaitForSeconds(firstLeveldelay);
         }
@@ -159,15 +152,9 @@ public class GameManager : MonoBehaviour
         //Select a random question among the current tier
         Question question = questionTier[UnityEngine.Random.Range(0, questionTier.Count)];
 
-        while (question.theme == previousTheme)
-        {
-            continue;
-        }
-
         //Display question
         yield return new WaitForSeconds(questionDisplayDelay);
         questionDisplayText.text = question.intitule;
-        previousTheme = question.theme;
         questionTier.Remove(question);
 
         yield return new WaitForSeconds(answersDisplayDelay);
@@ -185,8 +172,6 @@ public class GameManager : MonoBehaviour
                 trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Unvalid";
             }
         }
-
-        
 
         //Increment + enable timer
         nombreQuestionsposes ++;
@@ -216,6 +201,7 @@ public class GameManager : MonoBehaviour
     {
         playerList.Add(_player.GetComponent<PlayerComponent>());
     }
+
     IEnumerator KillPlayer(PlayerComponent _player)
     {
         //Anim mauvaise réponse
@@ -268,5 +254,4 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-    
 }
