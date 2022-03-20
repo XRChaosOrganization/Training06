@@ -11,6 +11,7 @@ public class TrappeButtonComponent : MonoBehaviour
     public float timeBeforeCallingFunction = 3.0f;
     public Renderer meshRenderer; 
     public bool isLoading = false; 
+    public bool isCallingFunction = false; 
     private float timer;
     private int numberOfPlayersInGame = 0;
 
@@ -27,8 +28,9 @@ public class TrappeButtonComponent : MonoBehaviour
 
             meshRenderer.materials[1].SetFloat("_Completion", completion);
 
-            if(timer >= timeBeforeCallingFunction)
+            if(timer >= timeBeforeCallingFunction && isCallingFunction == false)
             {
+                isCallingFunction = true; 
                 switch (functionToCall)
                 {
                     case FunctionToCall.START_GAME:
@@ -38,6 +40,8 @@ public class TrappeButtonComponent : MonoBehaviour
                         GameManager.Instance.QuitGame();
                         break;
                 }
+
+
             }
         }
         else

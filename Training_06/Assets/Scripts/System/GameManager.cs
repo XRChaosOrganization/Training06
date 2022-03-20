@@ -30,6 +30,12 @@ public class GameManager : MonoBehaviour
 
     [Header("Trappes")]
     Transform trappesContainer;
+    
+    [Header("Game Settings")]
+    public Animator captainAnimator; 
+    public Animator RopeAnimator; 
+    public Animator LevelAnimator; 
+    public Transform captainGamePosition; 
 
     [Header("Game Settings")]
     public int nombreQuestionsParPhase = 6;
@@ -107,6 +113,11 @@ public class GameManager : MonoBehaviour
     //Upon starting a new game (coming from the menu)
     public void LoadLevel()
     {
+        captainAnimator.SetTrigger("SwingRope");
+        RopeAnimator.SetTrigger("SwingRope");
+        StartCoroutine(PlayCaptainArrival(1.5f));
+
+
         timer = timePerLevel;
         
         menu.SetActive(false);
@@ -208,6 +219,15 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(wrongAnswerDelay);
         playerList.Remove(_player);
         _player.gameObject.SetActive(false);
+    }
+
+    private IEnumerator PlayCaptainArrival (float _time)
+    {
+        yield return new WaitForSeconds(_time);
+        LevelAnimator.SetTrigger("StartGame");
+        yield return new WaitForSeconds(0.5f);
+        captainAnimator.gameObject.transform.position = captainGamePosition.position;
+        captainAnimator.SetBool("IsIdle", true);
     }
 
     void ConvertCSV()
