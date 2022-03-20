@@ -22,14 +22,17 @@ ModelImporter:
       74: -7026873520395459715
     second: Char_Armature|Anim_Falling
   - first:
+      74: -6035182821355539847
+    second: Char_Armature|Anim_Idle
+  - first:
       74: 744034062508606050
     second: Char_Armature|Anim_Run
   - first:
-      74: 560460515558692170
-    second: Char_Armature|Char_ArmatureAction
-  - first:
       74: 6312594516846601931
     second: Char_Armature|PoseLIb
+  - first:
+      74: -2878810976715139360
+    second: Char_Armature|PoseLibRope
   externalObjects: {}
   materials:
     materialImportMode: 2
@@ -205,6 +208,64 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
+      name: Char_Armature|Anim_Falling
+      takeName: Char_Armature|Anim_Falling
+      internalID: 0
+      firstFrame: 0
+      lastFrame: 18
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    - serializedVersion: 16
+      name: Char_Armature|Anim_Idle
+      takeName: Char_Armature|Anim_Idle
+      internalID: 0
+      firstFrame: 0
+      lastFrame: 24
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 1
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    - serializedVersion: 16
       name: Char_Armature|Anim_Run
       takeName: Char_Armature|Anim_Run
       internalID: 0
@@ -234,11 +295,11 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: Char_Armature|Char_ArmatureAction
-      takeName: Char_Armature|Char_ArmatureAction
+      name: Char_Armature|PoseLibRope
+      takeName: Char_Armature|PoseLibRope
       internalID: 0
       firstFrame: 0
-      lastFrame: 18
+      lastFrame: 1
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -271,7 +332,7 @@ ModelImporter:
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
     importVisibility: 0
-    importBlendShapes: 1
+    importBlendShapes: 0
     importCameras: 0
     importLights: 0
     nodeNameCollisionStrategy: 1
@@ -281,12 +342,12 @@ ModelImporter:
     useFileUnits: 1
     keepQuads: 0
     weldVertices: 1
-    bakeAxisConversion: 0
+    bakeAxisConversion: 1
     preserveHierarchy: 0
     skinWeightsMode: 0
-    maxBonesPerVertex: 10
+    maxBonesPerVertex: 4
     minBoneWeight: 0.001
-    optimizeBones: 1
+    optimizeBones: 0
     meshOptimizationFlags: -1
     indexFormat: 0
     secondaryUVAngleDistortion: 8

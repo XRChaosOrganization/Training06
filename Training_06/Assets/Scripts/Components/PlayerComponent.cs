@@ -15,6 +15,7 @@ public class PlayerComponent : MonoBehaviour
 
     [Header("Game state")]
     public int vies;
+    public Animator playerAnimator;
 
     private Rigidbody rb;
 
@@ -32,6 +33,11 @@ public class PlayerComponent : MonoBehaviour
     {
         Vector3 desiredVelocity = new Vector3(input.x, 0.0f, input.y);
         rb.velocity = desiredVelocity * moveSpeed;
+
+        if(desiredVelocity.magnitude >= 0.1f)
+            playerAnimator.SetBool("isRunning", true);
+        else
+            playerAnimator.SetBool("isRunning", false);
 
         //Rotation
         Vector3 lastLookingDirection = transform.forward;
