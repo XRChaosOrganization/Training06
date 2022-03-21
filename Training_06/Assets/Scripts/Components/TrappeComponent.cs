@@ -11,5 +11,6 @@ public class TrappeComponent : MonoBehaviour
     public void UpdateTrappeText (string _answer)
     {
         answerText.text = _answer; 
+        answerText.GetComponentInParent<Animator>().SetTrigger("RollAnswerBlackboard");
     }
 }

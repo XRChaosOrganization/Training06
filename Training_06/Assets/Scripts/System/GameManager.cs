@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
 using TMPro;
+using UnityEngine.Playables;
 
 public class Question
 {
@@ -18,49 +19,41 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     [Header("Game Flow")]
-    public GameObject menu;
-    public GameObject game;
+    public PlayableDirector director; 
+    public PlayableAsset transitionToGame; 
+    public PlayableAsset gameLoop; 
 
     [Header("Question display")]
     public TextAsset questionsData;
     public TextMeshPro questionDisplayText;
+    public Animator blackboardQuestionAnimator; 
     
-    [Header("Timer display")]
+    [Header("Timer")]
+    public float timePerLevel = 20;
     public TextMeshPro timerDisplayText;
-
-    [Header("Trappes")]
-    Transform trappesContainer;
-    
-    [Header("Game Settings")]
-    public Animator captainAnimator; 
-    public Animator RopeAnimator; 
-    public Animator LevelAnimator; 
-    public Transform captainGamePosition; 
+    public TimerComponent timerComponent; 
 
     [Header("Game Settings")]
     public int nombreQuestionsParPhase = 6;
-    public float timePerLevel = 20;
-    public float firstLeveldelay;
-    public float questionDisplayDelay;
-    public float answersDisplayDelay;
-    public float noAnswerdelay;
-    public float goodAnswerDelay;
-    public float wrongAnswerDelay;
+
     public List<PlayerComponent> playerList;
     public List<GameObject> trappes;
+    public List<Transform> spots; 
 
     private List<Question> questions1;
     private List<Question> questions2;
     private List<Question> questions3;
+
     private int nombreQuestionsposes;
-    float timer;
-    bool isTimerEnabled;
-    string previousTheme;
+    private float timer;
+    private bool isTimerEnabled;
+    private string previousTheme;
 
     private void Awake()
     {
         Instance = this;
         ConvertCSV();
+        director.playableAsset = transitionToGame;
     }
     
     private void Update()
@@ -69,6 +62,8 @@ public class GameManager : MonoBehaviour
         {
             timerDisplayText.text = string.Format("{0:00}", timer);
             timer -= Time.deltaTime;
+            //timerComponent.UpdateTimer(timePerLevel, timer);
+
             if (timer<=0.2f)
             {
                 //Lock character controls 
@@ -78,54 +73,234 @@ public class GameManager : MonoBehaviour
             if (timer <=0)
             {
                 isTimerEnabled = false;
-                StartCoroutine(EndQuestion());
+                //StartCoroutine(EndQuestionCoroutine());
             }
         }
     }
 
-    IEnumerator EndQuestion()
+    public void LoadGame ()
     {
-        foreach (PlayerComponent _player in playerList)
+        director.Play();
+    }
+
+    public void ReplaceDirectorPlayable ()
+    {
+        director.playableAsset = gameLoop; 
+        director.extrapolationMode = DirectorWrapMode.Loop;
+        director.Play();
+    }
+
+    public void RollBlackBoards ()
+    {
+        blackboardQuestionAnimator.SetTrigger("RollQuestionBlackboard");
+    }
+
+    public void StartTimer ()
+    {
+        timer = timePerLevel;
+        isTimerEnabled = true;        
+    }
+
+    public void OpenHatches ()
+    {
+        foreach (GameObject hatch in trappes)
         {
-            if (_player.playerState == PlayerComponent.PlayerState.IS_RIGHT)
+            if(hatch.CompareTag("Unvalid") == true)
+                hatch.GetComponent<Animator>().SetBool("isOpen", true);
+        }
+        foreach (PlayerComponent players in playerList)
+        {
+            if(players.playerState == PlayerComponent.PlayerState.IS_WRONG)
             {
-                //Anim bonne réponse
-                yield return new WaitForSeconds(goodAnswerDelay);
+                players.rb.isKinematic = true;
+                players.rb.useGravity = false;
+                players.playerState = PlayerComponent.PlayerState.IS_DEAD;
+                players.GetComponentInChildren<Animator>().SetTrigger("Fall");
             }
-            else if (_player.playerState == PlayerComponent.PlayerState.IS_WRONG)
+        }
+    }
+
+    public void CloseHatches ()
+    {
+        foreach (GameObject hatch in trappes)
+        {
+            if(hatch.CompareTag("Unvalid") == true)
+                hatch.GetComponent<Animator>().SetBool("isOpen", false);
+        }
+    }
+
+    public void ShootBarrels ()
+    {
+        bool needsToShootBarrels =  false; 
+
+        foreach (PlayerComponent players in playerList)
+        {
+            if(players.playerState == PlayerComponent.PlayerState.DO_NOT_KNOW)
+                needsToShootBarrels = true; 
+        }
+
+        if(needsToShootBarrels)
+        {
+
+        }
+    }
+
+    public void EnablePlayerControl (bool _enabled)
+    {
+        foreach (PlayerComponent player in playerList)
+        {
+            player.canControlItsCharacter = _enabled;
+        }
+    }
+
+    public void PlacePlayersOnSpots ()
+    {
+        foreach (PlayerComponent item in playerList)
+        {
+            if(item.playerState != PlayerComponent.PlayerState.IS_DEAD)
             {
-                StartCoroutine(KillPlayer(_player));
+                item.RepositionPlayerOnSpot();
             }
-            else if (_player.vies > 0 && _player.playerState == PlayerComponent.PlayerState.DO_NOT_KNOW)
+        }
+    }
+
+    public Transform GetPlayerSpot ()
+    {
+        Transform spot = spots[0];
+        spots.RemoveAt(0);
+        return spot;
+    }
+
+    //private IEnumerator LoadGameCoroutine ()
+    //{
+    //    captainAnimator.SetTrigger("SwingRope");
+    //    RopeAnimator.SetTrigger("SwingRope");
+    //    
+    //    yield return new WaitForSeconds(0.1f);
+  
+    //    LevelAnimator.SetTrigger("StartGame");
+  
+    //    yield return new WaitForSeconds(0.5f);
+  
+    //    captainAnimator.gameObject.transform.position = captainGamePosition.position;
+    //    captainAnimator.SetBool("IsIdle", true);
+  
+    //    menu.SetActive(false);
+    //    game.SetActive(true);
+  
+    //    yield return new WaitForSeconds(1.5f);
+  
+    //    blackboardQuestionAnimator.SetTrigger("RollQuestionBlackboard");
+    //    yield return new WaitForSeconds(0.1f);
+    //    GenerateNewQuestion(nombreQuestionsposes);
+  
+    //    yield return new WaitForSeconds(1.0f);
+    //    timer = timePerLevel;
+    //    isTimerEnabled = true;
+    //}
+
+    //private IEnumerator LoadNewQuestionCoroutine ()
+    //{
+    //    blackboardQuestionAnimator.SetTrigger("RollQuestionBlackboard");
+    //    yield return new WaitForSeconds(0.1f);
+    //    GenerateNewQuestion(nombreQuestionsposes);
+
+    //    yield return new WaitForSeconds(1.0f);
+
+    //    timer = timePerLevel;
+    //    isTimerEnabled = true;
+    //}
+
+    //private IEnumerator EndQuestionCoroutine()
+    //{
+    //    captainAnimator.SetTrigger("Answers");
+  
+    //    yield return new WaitForSeconds(0.5f);
+  
+    //    for (int i = 0; i < trappes.Count; i++)
+    //    {
+    //        if(trappes[i].transform.CompareTag("Unvalid"))
+    //            trappes[i].GetComponent<Animator>().SetBool("isOpen", true);
+    //    }
+  
+    //    foreach (PlayerComponent _player in playerList)
+    //    {
+    //        if (_player.playerState == PlayerComponent.PlayerState.IS_WRONG)
+    //        {
+    //            _player.GetComponentInChildren<Animator>().SetTrigger("Fall");
+    //            yield return new WaitForSeconds(1.7f);
+    //            _player.gameObject.SetActive(false);
+    //        }
+    //        else if (_player.vies > 0 && _player.playerState == PlayerComponent.PlayerState.DO_NOT_KNOW)
+    //        {
+    //            captainAnimator.SetTrigger("Shoot");
+    //            //Anim pas de réponse / anim enlever une vie
+    //            yield return new WaitForSeconds(noAnswerdelay);
+    //            _player.vies--;
+    //        }
+    //        else if (_player.playerState == PlayerComponent.PlayerState.IS_RIGHT)
+    //        {
+    //            //nothing 
+    //        }
+    //        else
+    //        {
+    //            //StartCoroutine(KillPlayer(_player));
+    //        }
+    //    }
+  
+  
+    //    yield return new WaitForSeconds(1.0f);
+    //    for (int i = 0; i < trappes.Count; i++)
+    //    {
+    //        if(trappes[i].transform.CompareTag("Unvalid"))
+    //            trappes[i].GetComponent<Animator>().SetBool("isOpen", false);
+    //    }
+  
+    //    timerComponent.RebuildTimer();
+    //    LoadNewQuestion();
+    //}
+
+    public void GenerateNewQuestion ()
+    {
+        List<int> randomizator = FillRandomizer();
+        List<Question> questionTier = new List<Question>();
+
+        //Select the question tier
+        if(nombreQuestionsposes < nombreQuestionsParPhase)
+            questionTier = questions1;
+        else if (nombreQuestionsposes < 2 * nombreQuestionsParPhase)
+            questionTier = questions2;
+        else if (nombreQuestionsposes < 3 * nombreQuestionsParPhase)
+            questionTier = questions3;
+
+        //Select a random question among the current tier
+        Question question = questionTier[UnityEngine.Random.Range(0, questionTier.Count)];
+
+        //Display question
+        questionDisplayText.text = question.intitule;
+        questionTier.Remove(question);
+
+        //Display question's answers in a random trap & set its tag
+        for (int i = 0; i < randomizator.Count; i++)
+        {
+            if(i == 0)
             {
-                //Anim pas de réponse / anim enlever une vie
-                yield return new WaitForSeconds(noAnswerdelay);
-                _player.vies--;
+                trappes[randomizator[i]].GetComponent<TrappeComponent>().UpdateTrappeText(question.reponses[0]);
+                trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Valid";
+                trappes[randomizator[i]].tag = "Valid";
             }
             else
             {
-                StartCoroutine(KillPlayer(_player));
+                trappes[randomizator[i]].GetComponent<TrappeComponent>().UpdateTrappeText(question.reponses[i]);
+                trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Unvalid";
+                trappes[randomizator[i]].tag = "Unvalid";
             }
         }
-        LoadNewQuestion();
+
+        //Increment + enable timer
+        nombreQuestionsposes ++;
     }
-    
-    //Upon starting a new game (coming from the menu)
-    public void LoadLevel()
-    {
-        captainAnimator.SetTrigger("SwingRope");
-        RopeAnimator.SetTrigger("SwingRope");
-        StartCoroutine(PlayCaptainArrival(1.5f));
-
-
-        timer = timePerLevel;
-        
-        menu.SetActive(false);
-        game.SetActive(true);
-
-        StartCoroutine(GenerateNewQuestion(nombreQuestionsposes));
-    }
-        
+  
     public void QuitGame ()
     {
         #if UNITY_EDITOR
@@ -135,58 +310,9 @@ public class GameManager : MonoBehaviour
         Application.Quit();
     }
 
-    //Going to next question (already in game)
-    public void LoadNewQuestion ()
+    public void RegisterPlayer (GameObject _player)
     {
-        timer = timePerLevel;
-        StartCoroutine(GenerateNewQuestion(nombreQuestionsposes));
-    }
-
-    private IEnumerator GenerateNewQuestion (int _nbDeQuestionsPosees)
-    {
-        List<int> randomizator = FillRandomizer();
-        List<Question> questionTier = new List<Question>();
-
-        if (_nbDeQuestionsPosees == 0)
-        {
-            yield return new WaitForSeconds(firstLeveldelay);
-        }
-
-        //Select the question tier
-        if(_nbDeQuestionsPosees < nombreQuestionsParPhase)
-            questionTier = questions1;
-        else if (_nbDeQuestionsPosees < 2 * nombreQuestionsParPhase)
-            questionTier = questions2;
-        else if (_nbDeQuestionsPosees < 3 * nombreQuestionsParPhase)
-            questionTier = questions3;
-
-        //Select a random question among the current tier
-        Question question = questionTier[UnityEngine.Random.Range(0, questionTier.Count)];
-
-        //Display question
-        yield return new WaitForSeconds(questionDisplayDelay);
-        questionDisplayText.text = question.intitule;
-        questionTier.Remove(question);
-
-        yield return new WaitForSeconds(answersDisplayDelay);
-        //Display question's answers in a random trap & set its tag
-        for (int i = 0; i < randomizator.Count; i++)
-        {
-            if(i == 0)
-            {
-                trappes[randomizator[i]].GetComponent<TrappeComponent>().UpdateTrappeText(question.reponses[0]);
-                trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Valid";
-            }
-            else
-            {
-                trappes[randomizator[i]].GetComponent<TrappeComponent>().UpdateTrappeText(question.reponses[i]);
-                trappes[randomizator[i]].GetComponentInChildren<BoxCollider>().tag = "Unvalid";
-            }
-        }
-
-        //Increment + enable timer
-        nombreQuestionsposes ++;
-        isTimerEnabled = true;
+        playerList.Add(_player.GetComponent<PlayerComponent>());
     }
 
     //Fill a list of size 4 with random numbers between 0 & 3 
@@ -207,30 +333,17 @@ public class GameManager : MonoBehaviour
         }
         return randomizator; 
     }
+   
+    //private IEnumerator PlayCaptainArrival (float _time)
+    //{
+    //    yield return new WaitForSeconds(_time);
+    //    LevelAnimator.SetTrigger("StartGame");
+    //    yield return new WaitForSeconds(0.5f);
+    //    captainAnimator.gameObject.transform.position = captainGamePosition.position;
+    //    captainAnimator.SetBool("IsIdle", true);
+    //}
 
-    public void RegisterPlayer (GameObject _player)
-    {
-        playerList.Add(_player.GetComponent<PlayerComponent>());
-    }
-
-    IEnumerator KillPlayer(PlayerComponent _player)
-    {
-        //Anim mauvaise réponse
-        yield return new WaitForSeconds(wrongAnswerDelay);
-        playerList.Remove(_player);
-        _player.gameObject.SetActive(false);
-    }
-
-    private IEnumerator PlayCaptainArrival (float _time)
-    {
-        yield return new WaitForSeconds(_time);
-        LevelAnimator.SetTrigger("StartGame");
-        yield return new WaitForSeconds(0.5f);
-        captainAnimator.gameObject.transform.position = captainGamePosition.position;
-        captainAnimator.SetBool("IsIdle", true);
-    }
-
-    void ConvertCSV()
+    private void ConvertCSV()
     {
         questions1 = new List<Question>();
         questions2 = new List<Question>();

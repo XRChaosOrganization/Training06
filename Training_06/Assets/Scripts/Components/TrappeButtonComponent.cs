@@ -34,14 +34,12 @@ public class TrappeButtonComponent : MonoBehaviour
                 switch (functionToCall)
                 {
                     case FunctionToCall.START_GAME:
-                        GameManager.Instance.LoadLevel();
+                        GameManager.Instance.LoadGame();
                         break;
                     case FunctionToCall.QUIT:
                         GameManager.Instance.QuitGame();
                         break;
                 }
-
-
             }
         }
         else
