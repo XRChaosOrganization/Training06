@@ -77,6 +77,14 @@ public class PlayerComponent : MonoBehaviour
         input = _context.ReadValue<Vector2>();
     }
 
+    public void OnRestartGame (InputAction.CallbackContext _context)
+    {
+        if(_context.performed)
+        {
+            GameManager.Instance.RestartGame();
+        }
+    }
+
     public void RemoveLifeFromPlayer ()
     {
         vies --;

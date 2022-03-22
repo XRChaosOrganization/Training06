@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 using System;
 using TMPro;
 using UnityEngine.Playables;
+using UnityEngine.SceneManagement; 
 
 public class Question
 {
@@ -24,8 +25,9 @@ public class GameManager : MonoBehaviour
     public PlayableAsset gameLoop; 
     public PlayableAsset winnerFlow; 
     public PlayableAsset gameOverFlow; 
-
     public GameObject barrelPrefab; 
+    public bool isGameFinished = false; 
+
 
     [Header("Question display")]
     public TextAsset questionsData;
@@ -61,6 +63,7 @@ public class GameManager : MonoBehaviour
         winner = null; 
         ConvertCSV();
         director.playableAsset = transitionToGame;
+        isGameFinished = false; 
     }
     
     private void Update()
@@ -87,6 +90,7 @@ public class GameManager : MonoBehaviour
     public void LoadGame ()
     {
         director.Play();
+        GetComponent<PlayerInputManager>().DisableJoining(); 
     }
 
     public void ReplaceDirectorPlayable ()
@@ -205,6 +209,7 @@ public class GameManager : MonoBehaviour
             if(playerList[0].playerState == PlayerComponent.PlayerState.IS_DEAD)
             {
                 //Play game over flow 
+                isGameFinished = true;
                 director.extrapolationMode = DirectorWrapMode.None;
                 director.playableAsset = gameOverFlow; 
                 director.Play();
@@ -220,13 +225,11 @@ public class GameManager : MonoBehaviour
                     deadPlayers ++; 
             }
 
-            print("DEAD PLAYERS = " + deadPlayers);
-
-
             //All players are dead 
             if(deadPlayers >= this.GetComponent<PlayerInputManager>().playerCount)
             {
                 //Play game over flow 
+                isGameFinished = true;
                 director.extrapolationMode = DirectorWrapMode.None;
                 director.playableAsset = gameOverFlow; 
                 director.Play();
@@ -244,6 +247,7 @@ public class GameManager : MonoBehaviour
                     }
                 }
                 //Play winning flow 
+                isGameFinished = true;
                 director.extrapolationMode = DirectorWrapMode.None;
                 director.playableAsset = winnerFlow; 
                 director.Play();
@@ -253,18 +257,20 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame ()
     {
-        
+        if(isGameFinished == false) return; 
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void DisplayWinnerText ()
     {
-        questionDisplayText.text = winner.gameObject.name + " has won ! GG !";
+        questionDisplayText.text = winner.gameObject.name + " has won ! GG ! \n Hold START to restart game.";
         questionDisplayText.gameObject.SetActive(true);
     }
 
     public void DisplayGameOverText ()
     {
-        questionDisplayText.text = "GAME OVER ! \n Aucun gagnant ...";
+        questionDisplayText.text = "GAME OVER ! \n Aucun gagnant ... \n Hold START to restart game.";
         questionDisplayText.gameObject.SetActive(true);
     }
 
