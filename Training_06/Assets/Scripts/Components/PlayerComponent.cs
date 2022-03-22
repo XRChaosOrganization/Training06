@@ -22,6 +22,9 @@ public class PlayerComponent : MonoBehaviour
     public Animator playerAnimator;
     public Transform playerSpot; 
 
+    [Header("Custo")]
+    public Transform beardAnchor; 
+    public SkinnedMeshRenderer coatMaterial; 
 
     private void Awake() 
     {
@@ -33,6 +36,9 @@ public class PlayerComponent : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        GameObject beard = Instantiate(PlayerCustomizationManager.Instance.GetRandomBeard(), beardAnchor.transform.position, beardAnchor.transform.rotation);
+        beard.transform.SetParent(beardAnchor);
+        coatMaterial.materials[0].color = new Material(PlayerCustomizationManager.Instance.GetRandomCoatMaterial()).color;
     }
 
     private void Update()
