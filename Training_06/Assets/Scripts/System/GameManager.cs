@@ -273,6 +273,7 @@ public class GameManager : MonoBehaviour
         else if (nombreQuestionsposes < 3 * nombreQuestionsParPhase)
             questionTier = questions3;
 
+        
         //Select a random question among the current tier
         Question question = questionTier[UnityEngine.Random.Range(0, questionTier.Count)];
 

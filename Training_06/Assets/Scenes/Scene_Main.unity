@@ -6826,13 +6826,13 @@ MonoBehaviour:
   director: {fileID: 1725843165}
   transitionToGame: {fileID: 11400000, guid: c201a6d8e2d791647bfbc0d83b84981d, type: 2}
   gameLoop: {fileID: 11400000, guid: 97d44ebf4a375cb4bab96b66bde5da9d, type: 2}
-  questionsData: {fileID: 4900000, guid: 6fd017d3c5e6a2742b0e569969e4b896, type: 3}
+  questionsData: {fileID: 4900000, guid: 5f5c72ff31b7ea84eab498ee775935e3, type: 3}
   questionDisplayText: {fileID: 62667516687708679}
   blackboardQuestionAnimator: {fileID: 6629690391533635118}
   timePerLevel: 15
   timerDisplayText: {fileID: 5301774103029235372}
   timerComponent: {fileID: 606018904}
-  nombreQuestionsParPhase: 6
+  nombreQuestionsParPhase: 10
   playerList: []
   trappes:
   - {fileID: 1324323123}
