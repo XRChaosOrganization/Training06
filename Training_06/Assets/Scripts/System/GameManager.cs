@@ -22,6 +22,10 @@ public class GameManager : MonoBehaviour
     public PlayableDirector director; 
     public PlayableAsset transitionToGame; 
     public PlayableAsset gameLoop; 
+    public PlayableAsset winnerFlow; 
+    public PlayableAsset gameOverFlow; 
+
+    public GameObject barrelPrefab; 
 
     [Header("Question display")]
     public TextAsset questionsData;
@@ -36,6 +40,7 @@ public class GameManager : MonoBehaviour
     [Header("Game Settings")]
     public int nombreQuestionsParPhase = 6;
 
+    public Transform winnerSpot; 
     public List<PlayerComponent> playerList;
     public List<GameObject> trappes;
     public List<Transform> spots; 
@@ -48,10 +53,12 @@ public class GameManager : MonoBehaviour
     private float timer;
     private bool isTimerEnabled;
     private string previousTheme;
+    private GameObject winner; 
 
     private void Awake()
     {
         Instance = this;
+        winner = null; 
         ConvertCSV();
         director.playableAsset = transitionToGame;
     }
@@ -73,7 +80,6 @@ public class GameManager : MonoBehaviour
             if (timer <=0)
             {
                 isTimerEnabled = false;
-                //StartCoroutine(EndQuestionCoroutine());
             }
         }
     }
@@ -93,6 +99,20 @@ public class GameManager : MonoBehaviour
     public void RollBlackBoards ()
     {
         blackboardQuestionAnimator.SetTrigger("RollQuestionBlackboard");
+        foreach (GameObject item in trappes)
+        {
+            item.GetComponent<TrappeComponent>().RollAnswerBloackBoard();
+        }
+    }
+
+    public void DipslayQuestionText (bool _isDisplayed)
+    {
+        questionDisplayText.gameObject.SetActive(_isDisplayed);
+
+        foreach (GameObject item in trappes)
+        {
+            item.GetComponent<TrappeComponent>().DisplayTrapText(_isDisplayed);
+        }
     }
 
     public void StartTimer ()
@@ -114,6 +134,7 @@ public class GameManager : MonoBehaviour
             {
                 players.rb.isKinematic = true;
                 players.rb.useGravity = false;
+                players.GetComponent<CapsuleCollider>().enabled = false; 
                 players.playerState = PlayerComponent.PlayerState.IS_DEAD;
                 players.GetComponentInChildren<Animator>().SetTrigger("Fall");
             }
@@ -141,7 +162,11 @@ public class GameManager : MonoBehaviour
 
         if(needsToShootBarrels)
         {
-
+            foreach (PlayerComponent players in playerList)
+            {
+                if(players.playerState == PlayerComponent.PlayerState.DO_NOT_KNOW)
+                    Instantiate(barrelPrefab, new Vector3(players.transform.position.x, players.transform.position.y + 20.0f, players.transform.position.z), Quaternion.identity, this.transform);
+            }
         }
     }
 
@@ -149,7 +174,8 @@ public class GameManager : MonoBehaviour
     {
         foreach (PlayerComponent player in playerList)
         {
-            player.canControlItsCharacter = _enabled;
+            if(player.playerState != PlayerComponent.PlayerState.IS_DEAD)
+                player.canControlItsCharacter = _enabled;
         }
     }
 
@@ -171,94 +197,84 @@ public class GameManager : MonoBehaviour
         return spot;
     }
 
-    //private IEnumerator LoadGameCoroutine ()
-    //{
-    //    captainAnimator.SetTrigger("SwingRope");
-    //    RopeAnimator.SetTrigger("SwingRope");
-    //    
-    //    yield return new WaitForSeconds(0.1f);
-  
-    //    LevelAnimator.SetTrigger("StartGame");
-  
-    //    yield return new WaitForSeconds(0.5f);
-  
-    //    captainAnimator.gameObject.transform.position = captainGamePosition.position;
-    //    captainAnimator.SetBool("IsIdle", true);
-  
-    //    menu.SetActive(false);
-    //    game.SetActive(true);
-  
-    //    yield return new WaitForSeconds(1.5f);
-  
-    //    blackboardQuestionAnimator.SetTrigger("RollQuestionBlackboard");
-    //    yield return new WaitForSeconds(0.1f);
-    //    GenerateNewQuestion(nombreQuestionsposes);
-  
-    //    yield return new WaitForSeconds(1.0f);
-    //    timer = timePerLevel;
-    //    isTimerEnabled = true;
-    //}
+    public void VictoryCheck ()
+    {
+        //One Player flow
+        if(playerList.Count <= 1)
+        {
+            if(playerList[0].playerState == PlayerComponent.PlayerState.IS_DEAD)
+            {
+                //Play game over flow 
+                director.extrapolationMode = DirectorWrapMode.None;
+                director.playableAsset = gameOverFlow; 
+                director.Play();
+            }
+        }
+        //Multiple players flow 
+        else
+        {
+            int deadPlayers = 0;
+            foreach (PlayerComponent item in playerList)
+            {
+                if(item.playerState == PlayerComponent.PlayerState.IS_DEAD)
+                    deadPlayers ++; 
+            }
 
-    //private IEnumerator LoadNewQuestionCoroutine ()
-    //{
-    //    blackboardQuestionAnimator.SetTrigger("RollQuestionBlackboard");
-    //    yield return new WaitForSeconds(0.1f);
-    //    GenerateNewQuestion(nombreQuestionsposes);
+            print("DEAD PLAYERS = " + deadPlayers);
 
-    //    yield return new WaitForSeconds(1.0f);
 
-    //    timer = timePerLevel;
-    //    isTimerEnabled = true;
-    //}
+            //All players are dead 
+            if(deadPlayers >= this.GetComponent<PlayerInputManager>().playerCount)
+            {
+                //Play game over flow 
+                director.extrapolationMode = DirectorWrapMode.None;
+                director.playableAsset = gameOverFlow; 
+                director.Play();
+            }
 
-    //private IEnumerator EndQuestionCoroutine()
-    //{
-    //    captainAnimator.SetTrigger("Answers");
-  
-    //    yield return new WaitForSeconds(0.5f);
-  
-    //    for (int i = 0; i < trappes.Count; i++)
-    //    {
-    //        if(trappes[i].transform.CompareTag("Unvalid"))
-    //            trappes[i].GetComponent<Animator>().SetBool("isOpen", true);
-    //    }
-  
-    //    foreach (PlayerComponent _player in playerList)
-    //    {
-    //        if (_player.playerState == PlayerComponent.PlayerState.IS_WRONG)
-    //        {
-    //            _player.GetComponentInChildren<Animator>().SetTrigger("Fall");
-    //            yield return new WaitForSeconds(1.7f);
-    //            _player.gameObject.SetActive(false);
-    //        }
-    //        else if (_player.vies > 0 && _player.playerState == PlayerComponent.PlayerState.DO_NOT_KNOW)
-    //        {
-    //            captainAnimator.SetTrigger("Shoot");
-    //            //Anim pas de réponse / anim enlever une vie
-    //            yield return new WaitForSeconds(noAnswerdelay);
-    //            _player.vies--;
-    //        }
-    //        else if (_player.playerState == PlayerComponent.PlayerState.IS_RIGHT)
-    //        {
-    //            //nothing 
-    //        }
-    //        else
-    //        {
-    //            //StartCoroutine(KillPlayer(_player));
-    //        }
-    //    }
-  
-  
-    //    yield return new WaitForSeconds(1.0f);
-    //    for (int i = 0; i < trappes.Count; i++)
-    //    {
-    //        if(trappes[i].transform.CompareTag("Unvalid"))
-    //            trappes[i].GetComponent<Animator>().SetBool("isOpen", false);
-    //    }
-  
-    //    timerComponent.RebuildTimer();
-    //    LoadNewQuestion();
-    //}
+            //One survivor remaining 
+            if(deadPlayers == this.GetComponent<PlayerInputManager>().playerCount - 1)
+            {
+                foreach (PlayerComponent player in playerList)
+                {
+                    if(player.playerState != PlayerComponent.PlayerState.IS_DEAD)
+                    {
+                        winner = player.gameObject; 
+                        break; 
+                    }
+                }
+                //Play winning flow 
+                director.extrapolationMode = DirectorWrapMode.None;
+                director.playableAsset = winnerFlow; 
+                director.Play();
+            }
+        }
+    }
+
+    public void RestartGame ()
+    {
+        
+    }
+
+    public void DisplayWinnerText ()
+    {
+        questionDisplayText.text = winner.gameObject.name + " has won ! GG !";
+        questionDisplayText.gameObject.SetActive(true);
+    }
+
+    public void DisplayGameOverText ()
+    {
+        questionDisplayText.text = "GAME OVER ! \n Aucun gagnant ...";
+        questionDisplayText.gameObject.SetActive(true);
+    }
+
+    public void PlaceWinnerOnSpot ()
+    {
+        winner.GetComponent<Rigidbody>().isKinematic = true;
+        winner.GetComponent<Rigidbody>().useGravity = false; 
+        winner.transform.position = winnerSpot.position;
+        winner.transform.rotation = winnerSpot.rotation;
+    }
 
     public void GenerateNewQuestion ()
     {
@@ -334,15 +350,6 @@ public class GameManager : MonoBehaviour
         }
         return randomizator; 
     }
-   
-    //private IEnumerator PlayCaptainArrival (float _time)
-    //{
-    //    yield return new WaitForSeconds(_time);
-    //    LevelAnimator.SetTrigger("StartGame");
-    //    yield return new WaitForSeconds(0.5f);
-    //    captainAnimator.gameObject.transform.position = captainGamePosition.position;
-    //    captainAnimator.SetBool("IsIdle", true);
-    //}
 
     private void ConvertCSV()
     {

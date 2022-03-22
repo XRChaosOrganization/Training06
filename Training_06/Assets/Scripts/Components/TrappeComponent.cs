@@ -11,6 +11,15 @@ public class TrappeComponent : MonoBehaviour
     public void UpdateTrappeText (string _answer)
     {
         answerText.text = _answer; 
+    }
+
+    public void DisplayTrapText (bool _isDisplayed)
+    {
+        answerText.gameObject.SetActive(_isDisplayed); 
+    }
+
+    public void RollAnswerBloackBoard ()
+    {
         answerText.GetComponentInParent<Animator>().SetTrigger("RollAnswerBlackboard");
     }
 }

@@ -27,6 +27,7 @@ public class PlayerComponent : MonoBehaviour
     {
         GameManager.Instance.RegisterPlayer(this.gameObject);
         playerSpot = GameManager.Instance.GetPlayerSpot();
+        transform.position = playerSpot.position; 
     }
 
     private void Start()
@@ -68,6 +69,18 @@ public class PlayerComponent : MonoBehaviour
     public void OnMove(InputAction.CallbackContext _context)
     {
         input = _context.ReadValue<Vector2>();
+    }
+
+    public void RemoveLifeFromPlayer ()
+    {
+        vies --;
+        
+        if(vies <= 0)
+        {
+            canControlItsCharacter = false; 
+            playerState = PlayerState.IS_DEAD;
+            this.gameObject.SetActive(false);
+        }
     }
 
     private void OnTriggerEnter(Collider col)
